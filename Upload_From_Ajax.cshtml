@@ -1,0 +1,95 @@
+
+ <input type="file" class="custom-file-input" id="FileUSP" name="FileUSP" accept="application/pdf">
+ <button type="button" class="btn btn-primary start" id="btnUploadUSP"><span>Upload</span></button>
+
+ <input type="file" class="custom-file-input" id="FileUSPU" name="FileUSPU" accept="application/pdf"> 
+ <button type="button" class="btn btn-primary start" id="btnUploadUSPU"><span>Upload</span></button>
+
+
+<script>
+  $("#btnUploadUSPU").on("click", function (e) {
+        uploadfiles(rows_selectedUSPU,"Y");
+    });
+ $("#btnUploadUSP").on("click", function (e) {
+        uploadfiles(rows_selectedUSP,"N");
+    });
+</script>	
+
+<!-- ajax uploadfiles -->
+<script>	
+  function uploadfiles(rows_selected, itype) {
+	var formData = new FormData();
+	var fileInput = (itype == "N") ? document.getElementById('FileUSP') : document.getElementById('FileUSPU');
+  
+   for (var i = 0; i < fileInput.files.length; i++) {
+            formData.append(fileInput.files[i].name, fileInput.files[i]);
+        }
+		
+	formData.append("params", rows_selected);
+	formData.append("type", itype);
+	
+	 $.ajax({
+        type: 'POST',
+        url: '@Url.Action("UploadSP", "UnggahSuratPengantar", null, Request.Url.Scheme)',
+        enctype: 'multipart/form-data',
+        processData: false,  // Important!
+        contentType: false,
+        cache: false,
+        data: formData,
+        dataType:"json",
+        beforeSend: function (a) {
+            $("#btnUploadUSP").prop("disabled", true).html("<i class='fa fa-spinner fa-spin'></i>");
+        },
+        success: function (a) {
+            reloadlogin(a);
+            $("#btnUploadUSP").prop("disabled", false).text("Upload");
+            console.log(a);
+            if (a.success) {
+                $.confirm({
+                    title: "Berhasil",
+                    content: a.message,
+                    type: "green",
+                    typeAnimated: true,
+                    buttons: {
+                        tryAgain: {
+                            text: 'OK',
+                            btnClass: 'btn-success',
+                            action: function () {
+                                $("#tblUSP").DataTable().ajax.reload(); 
+                                $("#tblUSPU").DataTable().ajax.reload(); 
+                                $("#tblDUSP").DataTable().ajax.reload(); 
+           
+                            }
+                        }
+                    }
+                });
+            } else {
+                var iMsg = a.message;
+                if (a.statusRI) {
+                    iMsg = a.messageRI;
+                }
+                $.confirm({
+                    title: "Gagal",
+                    content: iMsg,
+                    type: "red",
+                    typeAnimated: true,
+                    buttons: {
+                        tryAgain: {
+                            text: 'OK',
+                            btnClass: 'btn-danger',
+                            action: function () {
+                                $("#tblDUSP").DataTable().ajax.reload();
+                                //alert("ok");
+                            }
+                        }
+                    }
+                });
+            }
+
+        },
+    });
+		
+  }
+</script>
+  
+  
